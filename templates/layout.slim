@@ -1,0 +1,8 @@
+html
+  head
+    title Start Page
+  body
+    h1 Layout
+    - for page in pages
+      li
+        a href="#{page.Url}" = page.Url
