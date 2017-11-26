@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-  // "io/ioutil"
   "bytes"
 	"log"
 	"net/http"
@@ -17,26 +16,30 @@ type Page struct {
 func rootHandler(w http.ResponseWriter, r *http.Request) {
   var buf bytes.Buffer
   var data []byte
+  var templateError string
 
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
   tmpl, err := slim.ParseFile("templates/layout.slim")
 
 	if err != nil {
-		data = []byte("404 - no layout")
+		templateError = "There was a problem parsing the layout"
 	} else {
     err = tmpl.Execute(&buf, slim.Values{
       "pages": []Page{
-        {Name: "Google", Url: "http://google.com"},
+        {Name: "Google", Url: "https://google.com"},
+        {Name: "Facebook", Url: "https://facebook.com"},
       },
     })
     if err != nil {
-      data = []byte("404 - layout parse")
+      templateError = "There was a problem displaying the template"
     }
   }
 
-  if data == nil {
+  if templateError == "" {
     data = []byte(buf.String())
+  } else {
+    data = []byte(templateError)
   }
 
 	w.Header().Set("Content-Length", fmt.Sprint(len(data)))
