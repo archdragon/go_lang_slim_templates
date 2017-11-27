@@ -13,37 +13,35 @@ type Page struct {
   Url string
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
+func getTemplate() []byte {
   var buf bytes.Buffer
-  var data []byte
-  var templateError string
+
+  tmpl, err := slim.ParseFile("templates/layout.slim")
+
+	if err != nil { return []byte("There was a problem parsing the layout") }
+
+  err = tmpl.Execute(&buf, slim.Values{
+    "pages": []Page{
+      {Name: "Google", Url: "https://google.com"},
+      {Name: "Facebook", Url: "https://facebook.com"},
+    },
+  })
+
+  if err != nil { return []byte("There was a problem displaying the template") }
+
+  return []byte(buf.String())
+}
+
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+  var templateData []byte
 
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
-  tmpl, err := slim.ParseFile("templates/layout.slim")
 
-	if err != nil {
-		templateError = "There was a problem parsing the layout"
-	} else {
-    err = tmpl.Execute(&buf, slim.Values{
-      "pages": []Page{
-        {Name: "Google", Url: "https://google.com"},
-        {Name: "Facebook", Url: "https://facebook.com"},
-      },
-    })
-    if err != nil {
-      templateError = "There was a problem displaying the template"
-    }
-  }
+  templateData = getTemplate()
 
-  if templateError == "" {
-    data = []byte(buf.String())
-  } else {
-    data = []byte(templateError)
-  }
-
-	w.Header().Set("Content-Length", fmt.Sprint(len(data)))
-	fmt.Fprint(w, string(data))
+	w.Header().Set("Content-Length", fmt.Sprint(len(templateData)))
+	fmt.Fprint(w, string(templateData))
 }
 
 func main() {
